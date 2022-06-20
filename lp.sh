@@ -3,7 +3,10 @@
 exit_if_err() {
 	if [ "$?" != "0" ]
 	then
-        	exit 1
+		if ! [[ -n "${IGNORE_ERRORS:-}" ]]
+	        then
+	       		exit 1
+		fi
 	fi
 }
 
@@ -12,13 +15,16 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-while getopts ":lbp:" opt; do
+while getopts ":lbip:" opt; do
   case $opt in
     l)
       LOG=true
       ;;
     b)
       BUILD=true
+      ;;
+    i)
+      IGNORE_ERRORS=true
       ;;
     p)
       PROJECT=$OPTARG

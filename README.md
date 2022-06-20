@@ -20,10 +20,10 @@ Java Maven project docker publisher.
 ```
 cd <WORK_DIR>
 git clone https://github.com/peyba/lazy-publish.git
-sudo cp pl.sh /bin
+sudo cp lp.sh /bin
 ```
 
-**Use**
+**Use**\
 At your project directory:\
 `lp.sz` - run 2 - 4 items from the list. Your project name will be used curren directory name.\
 For example, in case: `user@desktop:~/worl/my_project$ lp.sh` **project** will be used as my_your project name.
@@ -32,3 +32,4 @@ For example, in case: `user@desktop:~/worl/my_project$ lp.sh` **project** will b
 - `-b` flag run `mvn clean install`
 - `-l` flag run `docker logs <IMAGE> -n 10 -f`
 - `-p <IMAGE>` changes the default project name value to the specified one
+- `-i` ignore errors and go on
