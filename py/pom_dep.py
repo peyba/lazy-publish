@@ -3,7 +3,6 @@ import sys
 import re
 import argparse
 from typing import List
-from typing import Union
 
 import utils
 import const
