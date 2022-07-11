@@ -1,12 +1,25 @@
 import xml.etree.ElementTree as et
 import sys
 import re
+import argparse
 from typing import List
+from typing import Union
 
 import utils
+import const
 from classes import Artifact
-from const import NAME_SPACE
 
+MODULE_NAME = 'dependency'
+DEP_PRINT_TEMPLATE = '{}.{}: {}'
+
+#===========================================================
+# Create list of Artifact objects for all project dependensies
+# 
+# params:
+#   root - pom.xml root element (xml.etree.ElementTree.Element)
+# return:
+#   list of Artifact objects (classes.Artifact)
+#===========================================================
 def dep_ver_list(root:et.Element) -> List[Artifact]:
     dependencies = deps(root)
     l = []
@@ -18,36 +31,100 @@ def dep_ver_list(root:et.Element) -> List[Artifact]:
         l.append(o)
     return l
 
-def deps(root:et.Element):
-    dependencies = root.findall('./pom:dependencies/pom:dependency', namespaces=NAME_SPACE)
+#===========================================================
+# Return list of dependency elements
+# 
+# params:
+#   root - pom.xml root element (xml.etree.ElementTree.Element)
+# return:
+#   list of dependency elements
+#       (list[xml.etree.ElementTree.Element])
+#===========================================================
+def deps(root:et.Element) -> List[et.Element]:
+    dependencies = root.findall('./pom:dependencies/pom:dependency', namespaces=const.NAME_SPACE)
     return dependencies
 
+#===========================================================
+# Return dependencyManagement element
+# 
+# params:
+#   root - pom.xml root element (xml.etree.ElementTree.Element)
+# return:
+#   dependencyManagement element (xml.etree.ElementTree.Element)
+#===========================================================
 def dm_deps(root:et.Element):
-    return root.find('./pom:dependencyManagement', namespaces=NAME_SPACE)
+    return root.find('./pom:dependencyManagement', namespaces=const.NAME_SPACE)
 
-def dep(dependencies, art_id):
+#===========================================================
+# Search artifact in dependency elements list by artifact id
+#
+# params:
+#   dependencies - list of dependency elements
+#       (list[xml.etree.ElementTree.Element])
+#   art_id - artifact id, from artifactId tag (str)
+# return:
+#   dependency element if found or None
+#       (xml.etree.ElementTree.Element)
+#===========================================================
+def dep(dependencies:List[et.Element], art_id:str):
     for d in dependencies:
-        if d.findtext('./pom:artifactId', namespaces=NAME_SPACE) == art_id:
+        if d.findtext('./pom:artifactId', namespaces=const.NAME_SPACE) == art_id:
             return d
     return None
 
+#===========================================================
+# Return artifactId tag text
+# 
+# params:
+#   dep - dependency tag (xml.etree.ElementTree.Element)
+# return:
+#   artifactId tag text (str | None)
+#===========================================================
 def dep_art(dep:et.Element):
-    return dep.findtext('./pom:artifactId', namespaces=NAME_SPACE)
+    return dep.findtext('./pom:artifactId', namespaces=const.NAME_SPACE)
 
+#===========================================================
+# Return groupId tag text
+# 
+# params:
+#   dep - dependency tag (xml.etree.ElementTree.Element)
+# return:
+#   groupId tag text (str | None)
+#===========================================================
 def dep_group(dep:et.Element):
-    return dep.findtext('./pom:groupId', namespaces=NAME_SPACE)
+    return dep.findtext('./pom:groupId', namespaces=const.NAME_SPACE)
 
-def dep_group(dep:et.Element):
-    return dep.findtext('./pom:groupId', namespaces=NAME_SPACE)
-
-def dep_group_path(group_is:str):
+#===========================================================
+# Generate part of m2 path to jar
+# This is a project group path
+# m2/repository/com/example_group/example_artifact/
+#               ^^^^^^^^^^^^^^^^^
+# example:
+#   groupId is 'ru.app.utils'
+#   return 'ru/app/utils' or 'ru\app\utils' depend on OS 
+#
+# params:
+#   group_id - groupId tag text (str)
+# return:
+#   path (str)
+#===========================================================
+def dep_group_path(group_id:str):
     path = ''
-    for p in group_is.split('.'):
+    for p in group_id.split('.'):
         path = utils.path_join(path, p)
     return path
 
+#===========================================================
+# Return version tag text
+# 
+# params:
+#   root - pom.xml root element (xml.etree.ElementTree.Element)
+#   dep - dependency tag (xml.etree.ElementTree.Element)
+# return:
+#   version (str | None)
+#===========================================================
 def dep_ver(root:et.Element, dep:et.Element):
-    ver = dep.findtext('./pom:version', namespaces=NAME_SPACE)
+    ver = dep.findtext('./pom:version', namespaces=const.NAME_SPACE)
     if ver == None or ver == '':
         return dep_ver_in_dm(root, dep_art(dep))
     elif ver[0] == '$':
@@ -55,8 +132,11 @@ def dep_ver(root:et.Element, dep:et.Element):
     else:
         return ver
 
+#===========================================================
+#
+#===========================================================
 def dep_ver_in_dm(root:et.Element, art_id:str):
-    dm_list = root.findall('./pom:dependencyManagement/pom:dependencies/pom:dependency', NAME_SPACE)
+    dm_list = root.findall('./pom:dependencyManagement/pom:dependencies/pom:dependency', const.NAME_SPACE)
     for dm in dm_list:
         dm_pom_root = get_dm_pom_root(root, dm)
         dm_dep = dep(deps(dm_deps(dm_pom_root)), art_id)
@@ -64,6 +144,9 @@ def dep_ver_in_dm(root:et.Element, art_id:str):
             return dep_ver(dm_pom_root, dm_dep)
     return 'Unknown'
 
+#===========================================================
+#
+#===========================================================
 def get_dm_pom_path(root:et.Element, dm:et.Element):
     m2 = utils.get_m2()
     group = dep_group_path(dep_group(dm))
@@ -71,15 +154,62 @@ def get_dm_pom_path(root:et.Element, dm:et.Element):
     ver = dep_ver(root, dm)
     return utils.path_join(m2, 'repository', group, art, ver, '{}-{}.pom'.format(art, ver))
 
+#===========================================================
+#
+#===========================================================
 def get_dm_pom_root(pom_root:et.Element, pom_dm:et.Element):
     dm_pom_path = get_dm_pom_path(pom_root, pom_dm)
     if not utils.exists(dm_pom_path):
         sys.exit('Can\'t find ' + dm_pom_path)
     return et.parse(dm_pom_path).getroot()    
 
+#===========================================================
+#
+#===========================================================
 def dep_ver_by_prop(root:et.Element, dep:et.Element):
-    prop = str(dep.findtext('./pom:version', namespaces=NAME_SPACE))
+    prop = str(dep.findtext('./pom:version', namespaces=const.NAME_SPACE))
     prop_tag = re.search('[$][{](.+)[}]', prop).group(1)
     prop_path = './pom:properties/pom:' + prop_tag
-    return root.findtext(prop_path, namespaces=NAME_SPACE)
+    return root.findtext(prop_path, namespaces=const.NAME_SPACE)
 
+#===========================================================
+# RUN
+#===========================================================
+def dep_list_for_print(path:str) -> List[str]:
+    pom_file = utils.get_pom_path(path)
+
+    root = utils.get_root(pom_file, show_error=(__name__ == '__main__'))
+    
+    arts = dep_ver_list(root)
+    str_arts = []
+    for art in arts:
+        str_arts.append(DEP_PRINT_TEMPLATE.format(art.group, art.id, art.version))
+    return str_arts
+
+#===========================================================
+# Main
+#===========================================================
+def main():
+    argv = parse_args()
+    for dep in dep_list_for_print(argv.path):
+        print(dep)
+
+#===========================================================
+# Parse args
+#===========================================================
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Show Maven projec dependensies.', 
+        prog=const.PROG_TEMPLATE.format(MODULE_NAME)
+    )
+    parser.add_argument(
+        '--path', 
+        help='Path to root maven project directory'
+    )
+    return parser.parse_args()
+
+#===========================================================
+# Entry point
+#===========================================================
+if __name__ == '__main__':
+    main()

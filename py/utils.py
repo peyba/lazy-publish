@@ -1,6 +1,10 @@
 import platform
 import os
 import getpass
+import sys
+import xml.etree.ElementTree as et
+
+import const
 
 WIN = 'Windows'
 WIN_M2 = 'C:\\Users\\{}\\.m2'
@@ -23,3 +27,19 @@ def path_join(path, *paths):
 
 def exists(path):
     return os.path.exists(path)
+
+def get_root(path:str, show_error:bool=False):
+    if not exists(path):
+        if show_error:
+            sys.exit('Can\'t find {}'.format(path))
+        else:
+            return None
+
+    return et.parse(path).getroot()
+
+def get_pom_path(path:str) -> str:
+    if path == None or path == '':
+        pom_file = const.POM_FILE
+    else:
+        pom_file = path_join(path, const.POM_FILE)
+    return pom_file
