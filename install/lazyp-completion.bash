@@ -9,7 +9,7 @@ _lazyp_version_completions()
 
 _lazyp_completions()
 {
-    local COMMANDS="--help --version dependency publish version check-dependency"
+    local COMMANDS="--help --version dependency publish version check-dependency m2-installed"
 
     local cur prev words cword
     _init_completion || return

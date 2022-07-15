@@ -43,3 +43,23 @@ def get_pom_path(path:str) -> str:
     else:
         pom_file = path_join(path, const.POM_FILE)
     return pom_file
+
+#===========================================================
+# Generate part of m2 path to jar
+# This is a project group path
+# m2/repository/com/example_group/example_artifact/
+#               ^^^^^^^^^^^^^^^^^
+# example:
+#   groupId is 'ru.app.utils'
+#   return 'ru/app/utils' or 'ru\app\utils' depend on OS 
+#
+# params:
+#   group_id - groupId tag text (str)
+# return:
+#   path (str)
+#===========================================================
+def get_group_path(group_id:str):
+    path = ''
+    for p in group_id.split('.'):
+        path = path_join(path, p)
+    return path

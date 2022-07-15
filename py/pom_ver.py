@@ -6,6 +6,7 @@ import xml.etree.ElementTree as et
 
 import const
 import utils
+import pom
 
 MODULE_NAME = 'version'
 
@@ -23,12 +24,7 @@ def pom_ver(path:str) -> str:
     pom_file = utils.get_pom_path(path)
 
     root = utils.get_root(pom_file, show_error=(__name__ == '__main__'))
-    if root != None:
-        version = root.findtext('./pom:version', namespaces=const.NAME_SPACE)
-        if version != None:
-            return version
-
-    return None
+    return pom.get_ver(root)
 
 #===========================================================
 # Main

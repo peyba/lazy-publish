@@ -94,26 +94,6 @@ def dep_group(dep:et.Element):
     return dep.findtext('./pom:groupId', namespaces=const.NAME_SPACE)
 
 #===========================================================
-# Generate part of m2 path to jar
-# This is a project group path
-# m2/repository/com/example_group/example_artifact/
-#               ^^^^^^^^^^^^^^^^^
-# example:
-#   groupId is 'ru.app.utils'
-#   return 'ru/app/utils' or 'ru\app\utils' depend on OS 
-#
-# params:
-#   group_id - groupId tag text (str)
-# return:
-#   path (str)
-#===========================================================
-def dep_group_path(group_id:str):
-    path = ''
-    for p in group_id.split('.'):
-        path = utils.path_join(path, p)
-    return path
-
-#===========================================================
 # Return version tag text
 # 
 # params:
@@ -148,7 +128,7 @@ def dep_ver_in_dm(root:et.Element, art_id:str):
 #===========================================================
 def get_dm_pom_path(root:et.Element, dm:et.Element):
     m2 = utils.get_m2()
-    group = dep_group_path(dep_group(dm))
+    group = utils.get_group_path(dep_group(dm))
     art = dep_art(dm)
     ver = dep_ver(root, dm)
     return utils.path_join(m2, 'repository', group, art, ver, '{}-{}.pom'.format(art, ver))

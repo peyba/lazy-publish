@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v0.1.2
+version=v0.1.3
 words=($@)
 params=(${words[@]:1})
 usage="LazyP
@@ -16,6 +16,7 @@ Commands:
       dependency
       version
       check-dependency
+      m2-installed
 
 Use \"$(basename "$0") <command> --help\" for more information about a command.
 "
@@ -33,7 +34,7 @@ case "$1" in
       echo $version
       ;;
    publish)
-      $LAZYP_HOME/lp.sh ${params[@]}
+      $LAZYP_HOME/bin/lp.sh ${params[@]}
       #python3 $LAZYP_HOME/py/publish.py ${params[@]}
       ;;
    dependency)
@@ -44,6 +45,9 @@ case "$1" in
       ;;
    check-dependency)
       python3 $LAZYP_HOME/py/dep_check.py ${params[@]}
+      ;;
+   m2-installed)
+      python3 $LAZYP_HOME/py/m2_installed.py ${params[@]}
       ;;
    *)
       printf "illegal command: %s; try --help\n" "$1" >&2
