@@ -7,9 +7,16 @@ _lazyp_version_completions()
     COMPREPLY=($(compgen -W "$VERSION_OPTS" -- $cur))
 }
 
+_lazyp_find_dependency_completions()
+{
+    local VERSION_OPTS="--help --path --art-id --group"
+
+    COMPREPLY=($(compgen -W "$VERSION_OPTS" -- $cur))
+}
+
 _lazyp_completions()
 {
-    local COMMANDS="--help --version dependency publish version check-dependency m2-installed"
+    local COMMANDS="--help --version dependency publish version check-dependency m2-installed find-dependency"
 
     local cur prev words cword
     _init_completion || return
@@ -20,6 +27,9 @@ _lazyp_completions()
             ;;
         version)
             _lazyp_version_completions
+            ;;
+        find-dependency)
+            _lazyp_find_dependency_completions
             ;;
     esac
 }

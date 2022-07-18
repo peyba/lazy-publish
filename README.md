@@ -1,5 +1,5 @@
 # Lazy Publish
-v0.1.2
+v0.1.3
 
 **Why?**\
 Because I'm lazy
