@@ -8,15 +8,24 @@ import const
 
 WIN = 'Windows'
 WIN_M2 = 'C:\\Users\\{}\\.m2'
-#LINUX_M2 = '/home/{}/.m2'
-LINUX_M2 = '/mnt/c/Users/perer/.m2'
+LINUX_M2 = '/home/{}/.m2'
+M2_SETTINGS_FILE = 'settings.xml'
+REP = 'repository'
 
 def get_m2():
-    # TODO: check settings.xml
     if get_os() == WIN:
         return WIN_M2.format(get_user())
     else:
         return LINUX_M2.format(get_user())
+
+def get_local_repository() -> str:
+    m2_path = get_m2()
+    m2_settings = os.path.join(m2_path, M2_SETTINGS_FILE)
+    if (not os.path.exists(m2_settings)):
+        return os.path.join(m2_path, REP)
+    else:
+        root = get_root(m2_settings, show_error=(__name__ == '__main__'))
+        return root.findtext('./set:localRepository', namespaces=const.NAME_SPACE)
 
 def get_os():
     return platform.system()

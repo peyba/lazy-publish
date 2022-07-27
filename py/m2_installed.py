@@ -19,20 +19,23 @@ def m2_installed(path:str) -> List[str]:
     return m2_get_installed_versions(art)
 
 def m2_get_installed_versions(art:Artifact) -> List[str]:
-    m2 = utils.get_m2()
+    m2_rep = utils.get_local_repository()
     group = utils.get_group_path(art.group)
-    art_m2_path = utils.path_join(m2, 'repository', group, art.id)
+    art_m2_path = utils.path_join(m2_rep, group, art.id)
     if not utils.exists(art_m2_path):
-        return None
+        return []
     v = []
     for (dir_path, dir_names, file_names) in os.walk(art_m2_path):
+        if (dir_path == art_m2_path): continue
+        
         for full_file_name in file_names:
             file_name, file_extension = os.path.splitext(full_file_name)
-            if file_extension == JAR_EXTENSION:
+            if file_extension == JAR_EXTENSION or file_extension == POM_EXTENSION:
                 if file_name.find(SOURCE_FILE_NAME_PART) == -1:
                     ver = m2_get_version_from_jar(file_name, art.id)
                     if not ver == None:
                         v.append(ver)
+                        break
     return sorted(v)
 
 def m2_get_version_from_jar(jar_name:str, art_id:str) -> str:
