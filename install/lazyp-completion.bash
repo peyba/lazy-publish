@@ -14,6 +14,13 @@ _lazyp_find_dependency_completions()
     COMPREPLY=($(compgen -W "$VERSION_OPTS" -- $cur))
 }
 
+_lazyp_dependency_check_completions()
+{
+    local VERSION_OPTS="--help --path --short --no-color"
+
+    COMPREPLY=($(compgen -W "$VERSION_OPTS" -- $cur))
+}
+
 _lazyp_completions()
 {
     local COMMANDS="--help --version dependency publish version check-dependency m2-installed find-dependency"
@@ -30,6 +37,9 @@ _lazyp_completions()
             ;;
         find-dependency)
             _lazyp_find_dependency_completions
+            ;;
+        check-dependency)
+            _lazyp_dependency_check_completions
             ;;
     esac
 }

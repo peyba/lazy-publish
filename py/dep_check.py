@@ -1,3 +1,4 @@
+from ipaddress import collapse_addresses
 from classes import Artifact
 from typing import List
 import argparse
@@ -7,10 +8,12 @@ import colors
 import pom_dep
 import pom_ver
 import const
+import m2_installed
 
 MODULE_NAME = 'check-dependency'
 ART_TEMPLATE = '{:<30}{:<60}{}'
-VERSION_TEMPLATE = 'in use: {}; current: {}'
+VERSION_TEMPLATE_COLOR = colors.RESET
+VERSION_TEMPLATE = colors.paint('project:', VERSION_TEMPLATE_COLOR) + ' {:<22}' + colors.paint('sources:', VERSION_TEMPLATE_COLOR) + ' {:<22}' + colors.paint('m2:', VERSION_TEMPLATE_COLOR) + ' {}'
 
 def get_current_art(art:Artifact) -> Artifact:
     art_pom = utils.path_join('..', art.id)
@@ -33,26 +36,47 @@ def get_current_art(art:Artifact) -> Artifact:
 # return:
 #   collored string with groupId(optional), artifactId, version
 #===========================================================
-def get_colored_art_for_print(art:Artifact, show_group:bool=True) -> str:
+def get_colored_art_for_print(art:Artifact, show_group:bool=True, no_color:bool=False) -> str:
     current_art = get_current_art(art)
+    installed_versions = get_colored_m2_installed_for_print(art)
+
     if current_art.version == None:
-        version = VERSION_TEMPLATE.format(colors.YELLOW + art.version + colors.RESET, colors.YELLOW + 'Unknown' + colors.RESET)
+        version = VERSION_TEMPLATE.format(colors.paint_yellow(art.version), colors.paint_yellow('Unknown'), installed_versions)
     elif current_art.version == art.version:
-        version = colors.GREEN + art.version + colors.RESET
+        version = VERSION_TEMPLATE.format(colors.paint_green(art.version), colors.paint_green(current_art.version), installed_versions)
     else:
-        version = VERSION_TEMPLATE.format(colors.RED + art.version + colors.RESET, colors.GREEN + current_art.version + colors.RESET)
-    
+        version = VERSION_TEMPLATE.format(colors.paint_red(art.version), colors.paint_green(current_art.version), installed_versions)
+
     if show_group:
         group = art.group + ' '
     else:
         group = ''
     
-    return ART_TEMPLATE.format(group, colors.CYAN + art.id + colors.RESET , version)
+    return ART_TEMPLATE.format(group, colors.paint_cyan(art.id), version)
+
+def get_colored_m2_installed_for_print(art:Artifact) :
+    installed_versions = m2_installed.m2_get_installed_versions(art)
+    result = ''
+    if art.version in installed_versions:
+        for ver in installed_versions:
+            if (ver == art.version):
+                result += '[' + colors.paint_yellow(ver) + ']'
+            else:
+                result += ver
+            result += ', '
+    else:
+        for ver in installed_versions:
+            result += ver + ', '
+        result = colors.paint(result, colors.YELLOW_BG)
+
+    result = utils.del_last_char(result, ',')
+    return result
+
 
 #===========================================================
 # TODO: discription
 #===========================================================
-def get_art_list_for_print(path:str) -> List[str]:
+def get_art_list_for_print(path:str, no_color:bool=False, short:bool=False) -> List[str]:
     pom_file = utils.get_pom_path(path)
 
     root = utils.get_root(pom_file, show_error=(__name__ == '__main__'))
@@ -60,7 +84,7 @@ def get_art_list_for_print(path:str) -> List[str]:
     arts = pom_dep.dep_ver_list(root)
     str_arts = []
     for art in arts:
-        str_arts.append(get_colored_art_for_print(art))
+        str_arts.append(get_colored_art_for_print(art, no_color=no_color))
     return str_arts
 
 #===========================================================
@@ -82,6 +106,18 @@ def parse_args():
     parser.add_argument(
         '--path', 
         help='Path to root maven project directory'
+    )
+    parser.add_argument(
+        '-s', '--short',
+        required=False,
+        action='store_true',
+        help='Short interpretation'
+    )
+    parser.add_argument(
+        '--no-color',
+        required=False,
+        action='store_true',
+        help='Print uncolored result'
     )
     return parser.parse_args()
 

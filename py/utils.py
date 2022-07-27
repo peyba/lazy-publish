@@ -8,9 +8,11 @@ import const
 
 WIN = 'Windows'
 WIN_M2 = 'C:\\Users\\{}\\.m2'
-LINUX_M2 = '/home/{}/.m2'
+#LINUX_M2 = '/home/{}/.m2'
+LINUX_M2 = '/mnt/c/Users/perer/.m2'
 
 def get_m2():
+    # TODO: check settings.xml
     if get_os() == WIN:
         return WIN_M2.format(get_user())
     else:
@@ -63,3 +65,10 @@ def get_group_path(group_id:str):
     for p in group_id.split('.'):
         path = path_join(path, p)
     return path
+
+def del_last_char(text:str, char:str) -> str:
+    if (len(char) > 1):
+        raise Exception('Error! "{}" not a char'.format(char))
+    txet = text[::-1]
+    index = txet.find(char) + 1
+    return text[0:len(text)-index] + text[len(text)-index + 1:]

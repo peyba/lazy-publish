@@ -65,10 +65,11 @@ def dm_deps(root:et.Element):
 #   dependency element if found or None
 #       (xml.etree.ElementTree.Element)
 #===========================================================
-def dep(dependencies:List[et.Element], art_id:str):
+def dep(dependencies:List[et.Element], group:str, art_id:str):
     for d in dependencies:
-        if d.findtext('./pom:artifactId', namespaces=const.NAME_SPACE) == art_id:
-            return d
+        if group == dep_group(d):
+            if d.findtext('./pom:artifactId', namespaces=const.NAME_SPACE) == art_id:
+                return d
     return None
 
 #===========================================================
@@ -105,7 +106,7 @@ def dep_group(dep:et.Element):
 def dep_ver(root:et.Element, dep:et.Element, ignore_error:bool=False, exit_on_error:bool=False):
     ver = dep.findtext('./pom:version', namespaces=const.NAME_SPACE)
     if ver == None or ver == '':
-        return dep_ver_in_dm(root, dep_art(dep), ignore_error, exit_on_error)
+        return dep_ver_in_dm(root, dep_group(dep), dep_art(dep), ignore_error, exit_on_error)
     elif ver[0] == '$':
         return dep_ver_by_prop(root, dep)
     else:
@@ -114,15 +115,24 @@ def dep_ver(root:et.Element, dep:et.Element, ignore_error:bool=False, exit_on_er
 #===========================================================
 #
 #===========================================================
-def dep_ver_in_dm(root:et.Element, art_id:str, ignore_error:bool=False, exit_on_error:bool=False):
+def dep_ver_in_dm(root:et.Element, group:str, art_id:str, ignore_error:bool=False, exit_on_error:bool=False):
     dm_list = root.findall('./pom:dependencyManagement/pom:dependencies/pom:dependency', const.NAME_SPACE)
     for dm in dm_list:
         dm_pom_root = get_dm_pom_root(root, dm, ignore_error, exit_on_error)
-        if (dm_pom_root == None):
-            continue
-        dm_dep = dep(deps(dm_deps(dm_pom_root)), art_id)
-        if dm_dep != None:
-            return dep_ver(dm_pom_root, dm_dep)
+        if (dm_pom_root != None):
+            dm_deps_var = dm_deps(dm_pom_root)
+            if (dm_deps_var != None):
+                deps_var = deps(dm_deps_var)
+                if (deps_var != None): 
+                    dm_dep = dep((deps_var), group, art_id)
+                    if (dm_dep != None):
+                        return dep_ver(dm_pom_root, dm_dep)
+            
+            dep_dep_ver = dep_ver_in_dm(dm_pom_root, group, art_id)
+            if (dep_dep_ver == 'Unknown'):
+                continue
+            else:
+                return dep_dep_ver
     return 'Unknown'
 
 #===========================================================
@@ -138,7 +148,7 @@ def get_dm_pom_path(root:et.Element, dm:et.Element):
 #===========================================================
 #
 #===========================================================
-def get_dm_pom_root(pom_root:et.Element, pom_dm:et.Element, ignore_error:bool=False, exit_on_error:bool=False):
+def get_dm_pom_root(pom_root:et.Element, pom_dm:et.Element, ignore_error:bool, exit_on_error:bool):
     dm_pom_path = get_dm_pom_path(pom_root, pom_dm)
     if not utils.exists(dm_pom_path):
         if (not ignore_error):

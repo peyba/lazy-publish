@@ -10,6 +10,7 @@ from classes import Artifact
 MODULE_NAME = 'm2-installed'
 JAR_EXTENSION = '.jar'
 POM_EXTENSION = '.pom'
+SOURCE_FILE_NAME_PART = '-sources'
 
 def m2_installed(path:str) -> List[str]:
     pom_file = utils.get_pom_path(path)
@@ -28,9 +29,10 @@ def m2_get_installed_versions(art:Artifact) -> List[str]:
         for full_file_name in file_names:
             file_name, file_extension = os.path.splitext(full_file_name)
             if file_extension == JAR_EXTENSION:
-                ver = m2_get_version_from_jar(file_name, art.id)
-                if not ver == None:
-                    v.append(ver)
+                if file_name.find(SOURCE_FILE_NAME_PART) == -1:
+                    ver = m2_get_version_from_jar(file_name, art.id)
+                    if not ver == None:
+                        v.append(ver)
     return sorted(v)
 
 def m2_get_version_from_jar(jar_name:str, art_id:str) -> str:
