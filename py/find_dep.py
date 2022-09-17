@@ -1,5 +1,6 @@
 import argparse
 import os
+import logging
 
 import const
 import utils
@@ -8,10 +9,11 @@ import colors
 from classes import Waiter
 
 MODULE_NAME = 'find-dependency'
-PRINT_TEMPLATE = 'in ' + colors.CYAN + '{}' + colors.DEFAULT + ' version: ' + colors.YELLOW + '{}'  + colors.DEFAULT
+PRINT_TEMPLATE = 'in ' + colors.CYAN + '{}' + colors.DEFAULT + ' version: ' + colors.YELLOW + '{}' + colors.DEFAULT
 
-def find_and_print_dep(path:str, art_id:str, group:str=None) -> str:
-    i=0
+
+def find_and_print_dep(path: str, art_id: str, group: str = None) -> str:
+    i = 0
     w = Waiter()
     for (dir_path, dir_names, file_names) in os.walk(path):
         for file in file_names:
@@ -25,40 +27,49 @@ def find_and_print_dep(path:str, art_id:str, group:str=None) -> str:
                         print(PRINT_TEMPLATE.format(dir_path, art.version))
             i += 1
 
-#===========================================================
+
+# ===========================================================
 # Main
-#===========================================================
+# ===========================================================
 def main():
     argv = parse_args()
+    logging.basicConfig(level=argv.log)
     find_and_print_dep(argv.path, argv.art_id, argv.group)
 
-#===========================================================
+
+# ===========================================================
 # Parse args
-#===========================================================
+# ===========================================================
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Show Maven projec version.', 
+        description='Show Maven projec version.',
         prog=const.PROG_TEMPLATE.format(MODULE_NAME)
     )
     parser.add_argument(
-        '--path', 
+        '--path',
         default='.',
         help='Path to root maven project directory'
     )
     parser.add_argument(
-        '--art-id', 
+        '--art-id',
         required=True,
         help='Maven artifact id'
     )
     parser.add_argument(
-        '--group', 
+        '--group',
         required=False,
         help='Maven artifact group'
     )
+    parser.add_argument(
+        '--log',
+        choices=logging._nameToLevel,
+        help='Log level'
+    )
     return parser.parse_args()
 
-#===========================================================
+
+# ===========================================================
 # Entry point
-#===========================================================
+# ===========================================================
 if __name__ == '__main__':
     main()

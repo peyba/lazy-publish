@@ -2,21 +2,21 @@
 
 _lazyp_version_completions()
 {
-    local VERSION_OPTS="--help --path"
+    local VERSION_OPTS="--help --path --log"
 
     COMPREPLY=($(compgen -W "$VERSION_OPTS" -- $cur))
 }
 
 _lazyp_find_dependency_completions()
 {
-    local VERSION_OPTS="--help --path --art-id --group"
+    local VERSION_OPTS="--help --path --art-id --group --log"
 
     COMPREPLY=($(compgen -W "$VERSION_OPTS" -- $cur))
 }
 
 _lazyp_dependency_check_completions()
 {
-    local VERSION_OPTS="--help --path --short --no-color"
+    local VERSION_OPTS="--help --path --short --no-color --log"
 
     COMPREPLY=($(compgen -W "$VERSION_OPTS" -- $cur))
 }

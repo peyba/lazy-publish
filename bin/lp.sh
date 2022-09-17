@@ -43,7 +43,7 @@ then
 	printf " ${RED}run${NC} > ${GREEN}mvn clean install${NC}\n"
 	printf "#############################################\n"
 	printf "\n"
-
+  mvn --version
 	mvn clean install
 	exit_if_err
 fi
