@@ -1,10 +1,8 @@
-from os.path import exists
 import xml.etree.ElementTree as et
 
 import pom_dep
 import const
 from classes import Artifact
-from py.classes import Artifact
 
 
 def get_ver(root: et.Element) -> str:
@@ -16,7 +14,7 @@ def get_ver(root: et.Element) -> str:
     return None
 
 
-def get_atr(root: et.Element) -> Artifact | None:
+def get_atr(root: et.Element):
     if root is not None:
         o = Artifact()
         o.id = pom_dep.dep_art(root)
